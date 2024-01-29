@@ -2,17 +2,17 @@ import { useEffect } from "react";
 import { useState } from "react";
 import io from "socket.io-client";
 
+const socket = io.connect("http://localhost:3000");
+
 export default function SocketHome() {
   const [room, setRoom] = useState("");
   const [isRoom, setIsRoom] = useState(false);
   const [messageReceived, setMessageReceived] = useState("");
   const [message, setMessage] = useState("");
 
-  const socket = io.connect("http://localhost:3000");
-
   const joinRoom = () => {
     if (room !== "") {
-      socket.emit("join_room", { room: room });
+      socket.emit("join_room", room);
       setIsRoom(true);
     }
   };
@@ -21,16 +21,9 @@ export default function SocketHome() {
     socket.emit("send_message", { message, room: room });
   };
 
-  // useEffect(() => {
-  //   socket.on("receive_message", (data) => {
-  //     setMessageReceived(data.message);
-  //     alert(data);
-  //   });
-  // }, [socket]);
-
   useEffect(() => {
     socket.on("receive_message", (data) => {
-      console.log(data);
+      setMessageReceived(data.message);
     });
   }, [socket]);
 
