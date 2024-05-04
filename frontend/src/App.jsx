@@ -1,11 +1,14 @@
 import { Route, Routes } from "react-router-dom";
-import SocketHome from "./pages/SocketTesting";
+import WordPartyTesting from "./pages/WordPartyTesting";
 
 function App() {
   return (
     <>
       <Routes>
-        <Route path="/testing" element={<SocketHome></SocketHome>}></Route>
+        <Route
+          path="/wordpartytesting"
+          element={<WordPartyTesting></WordPartyTesting>}
+        ></Route>
       </Routes>
     </>
   );
