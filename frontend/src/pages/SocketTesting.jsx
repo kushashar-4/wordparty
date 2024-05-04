@@ -5,25 +5,31 @@ export default function SocketHome() {
   const [room, setRoom] = useState("");
   const [isRoom, setIsRoom] = useState(false);
   const [message, setMessage] = useState("");
+  const [username, setUsername] = useState("");
   const [receivedMessages, setReceivedMessages] = useState([]);
 
   const socket = io.connect("http://localhost:3000");
 
   const joinRoom = () => {
-    if (room !== "") {
-      socket.emit("join_room", { room });
+    if (room !== "" && username !== "") {
+      socket.emit("join_room", { room, username });
       setIsRoom(true);
+    } else {
+      window.alert("fill out both fields");
     }
   };
 
-  const handleSubmit = () => {
+  const handleSend = () => {
     socket.emit("send_message", { message, room });
   };
 
   useEffect(() => {
     socket.on("get_message", (data) => {
-      // Use functional update to correctly update state based on previous state
       setReceivedMessages((prevMessages) => [...prevMessages, data.message]);
+    });
+
+    socket.on("get_room_info", (data) => {
+      console.log(data);
     });
   }, [socket]);
 
@@ -35,6 +41,10 @@ export default function SocketHome() {
             placeholder="Room Name"
             onChange={(e) => setRoom(e.target.value)}
           ></input>
+          <input
+            placeholder="Username"
+            onChange={(e) => setUsername(e.target.value)}
+          ></input>
           <button onClick={joinRoom}>Join Room</button>
         </>
       ) : (
@@ -43,7 +53,7 @@ export default function SocketHome() {
             placeholder="Message..."
             onChange={(e) => setMessage(e.target.value)}
           ></input>
-          <button onClick={handleSubmit}>Send</button>
+          <button onClick={handleSend}>Send</button>
           <h1>Message:</h1>
           {receivedMessages.map((message, index) => (
             <p key={index}>{message}</p>
