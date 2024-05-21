@@ -18,13 +18,9 @@ const io = new Server(server, {
 const allUsers = {};
 
 io.on("connection", (socket) => {
-  // socket.on("send_message", (data) => {
-  //   socket.to(data.room).emit("get_message", data);
-  // });
-
-  //data contains a room and a username
   socket.on("join_room", (data) => {
     socket.join(data.room);
+
     let roomUsers = Array.from(io.sockets.adapter.rooms.get(data.room));
     const userData = {
       clientID: roomUsers[roomUsers.length - 1],
@@ -40,18 +36,42 @@ io.on("connection", (socket) => {
 
     console.log(allUsers);
 
-    socket.to(data.room).emit("get_room_info", allUsers[data.room]);
+    socket.to(data.room).emit("update_user_info", allUsers[data.room]);
   });
 
-  //data contains a room and a user client id
-  socket.on("submit_word", (data) => {
-    for (let i = 0; i < allUsers[data.room].length; i++) {
-      if (allUsers[data.room][i] === data.clientID) {
-        allUsers[data.room][i].points += 1;
+  socket.on("disconnecting", (reason) => {
+    let infoArray = Array.from(socket.rooms);
+    let clientID = infoArray[0];
+    let clientRoom = infoArray[1];
+    for (const room of socket.rooms) {
+      if (room !== socket.id) {
+        if (allUsers[clientRoom].length == 1) {
+          delete allUsers[clientRoom];
+        } else {
+          for (let i = 0; i < allUsers[clientRoom].length; i++) {
+            if (allUsers[clientRoom][i].clientID == clientID) {
+              allUsers[clientRoom].splice(i, 1);
+            }
+          }
+        }
+      }
+    }
+    console.log(allUsers);
+    if (allUsers[clientRoom] !== null) {
+      socket.to(clientRoom).emit("update_user_info", allUsers[clientRoom]);
+    }
+  });
+
+  socket.on("update_points", (data) => {
+    let clientID = Array.from(socket.rooms)[0];
+    let clientRoom = data.room;
+    for (let i = 0; i < allUsers[clientRoom].length; i++) {
+      if (allUsers[clientRoom][i].clientID == clientID) {
+        console.log(allUsers[clientRoom][i]);
       }
     }
 
-    socket.to(data.room).emit("updatedPoints", allUsers[data.room]);
+    socket.to(clientRoom).emit("update_user_info", allUsers[clientRoom]);
   });
 });
 

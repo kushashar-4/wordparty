@@ -9,30 +9,26 @@ export default function WordPartyTesting() {
   const [currentPoints, setCurrentPoints] = useState();
   const [currentWord, setCurrentWord] = useState("");
   let usedWords = new Set();
-  let clientID = socket.id;
+  let pointAmount = 1;
 
   const joinRoom = () => {
     if (room !== "" && username !== "") {
       socket.emit("join_room", { room, username });
+      socket.username = username;
       setIsRoom(true);
     } else {
       window.alert("enter both fields");
     }
   };
 
-  const submitWord = () => {
-    //Add conditionals here to verify if the word is valid and meets requirements, also add it to a used words set
-    if (currentWord !== "") {
-      socket.emit("submit_word", { room, clientID });
-    }
+  const addPoint = () => {
+    socket.emit("update_points", { pointAmount, room });
   };
 
   useEffect(() => {
-    socket.on("get_room_info", (data) => {
+    socket.on("update_user_info", (data) => {
       console.log(data);
     });
-
-    socket.on("update_points", (data) => {});
   }, [socket]);
 
   return (
@@ -51,13 +47,7 @@ export default function WordPartyTesting() {
         </>
       ) : (
         <>
-          <input placeholder="Enter random word"></input>
-          <button
-            onClick={submitWord}
-            onChange={(e) => setCurrentWord(e.target.value)}
-          >
-            Submit
-          </button>
+          <button onClick={addPoint}>Add a point</button>
         </>
       )}
     </div>
