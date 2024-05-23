@@ -20,10 +20,8 @@ const allUsers = {};
 io.on("connection", (socket) => {
   socket.on("join_room", (data) => {
     socket.join(data.room);
-
-    let roomUsers = Array.from(io.sockets.adapter.rooms.get(data.room));
     const userData = {
-      clientID: roomUsers[roomUsers.length - 1],
+      clientID: socket.id,
       username: data.username,
       points: 0,
     };
@@ -34,9 +32,8 @@ io.on("connection", (socket) => {
       allUsers[data.room] = [userData];
     }
 
-    console.log(allUsers);
-
     socket.to(data.room).emit("update_user_info", allUsers[data.room]);
+    socket.emit("update_client_id", socket.id);
   });
 
   socket.on("disconnecting", (reason) => {
@@ -56,22 +53,19 @@ io.on("connection", (socket) => {
         }
       }
     }
-    console.log(allUsers);
     if (allUsers[clientRoom] !== null) {
       socket.to(clientRoom).emit("update_user_info", allUsers[clientRoom]);
     }
   });
 
   socket.on("update_points", (data) => {
-    let clientID = Array.from(socket.rooms)[0];
-    let clientRoom = data.room;
-    for (let i = 0; i < allUsers[clientRoom].length; i++) {
-      if (allUsers[clientRoom][i].clientID == clientID) {
-        console.log(allUsers[clientRoom][i]);
+    console.log(data.clientID);
+    for (let i = 0; i < allUsers[data.room].length; i++) {
+      if (allUsers[data.room][i].clientID == data.clientID) {
+        console.log(allUsers[data.room][i]);
       }
     }
-
-    socket.to(clientRoom).emit("update_user_info", allUsers[clientRoom]);
+    socket.to(data.room).emit("update_user_info", allUsers[data.room]);
   });
 });
 

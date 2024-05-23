@@ -8,13 +8,14 @@ export default function WordPartyTesting() {
   const [isRoom, setIsRoom] = useState(false);
   const [currentPoints, setCurrentPoints] = useState();
   const [currentWord, setCurrentWord] = useState("");
+  const [clientID, setClientID] = useState("");
   let usedWords = new Set();
+  let currentUserInfo = [];
   let pointAmount = 1;
 
   const joinRoom = () => {
     if (room !== "" && username !== "") {
       socket.emit("join_room", { room, username });
-      socket.username = username;
       setIsRoom(true);
     } else {
       window.alert("enter both fields");
@@ -22,12 +23,18 @@ export default function WordPartyTesting() {
   };
 
   const addPoint = () => {
-    socket.emit("update_points", { pointAmount, room });
+    socket.emit("update_points", { pointAmount, room, clientID });
   };
 
   useEffect(() => {
     socket.on("update_user_info", (data) => {
-      console.log(data);
+      currentUserInfo = data;
+      console.log(currentUserInfo);
+    });
+
+    socket.on("update_client_id", (data) => {
+      setClientID(data);
+      console.log(clientID);
     });
   }, [socket]);
 
