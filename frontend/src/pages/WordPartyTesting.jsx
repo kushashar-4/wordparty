@@ -8,9 +8,9 @@ export default function WordPartyTesting() {
   const [isRoom, setIsRoom] = useState(false);
   const [currentPoints, setCurrentPoints] = useState();
   const [currentWord, setCurrentWord] = useState("");
+  const [currentUserInfo, setCurrentUserInfo] = useState([]);
   const [clientID, setClientID] = useState("");
   let usedWords = new Set();
-  let currentUserInfo = [];
   let pointAmount = 1;
 
   const joinRoom = () => {
@@ -28,13 +28,12 @@ export default function WordPartyTesting() {
 
   useEffect(() => {
     socket.on("update_user_info", (data) => {
-      currentUserInfo = data;
-      console.log(currentUserInfo);
+      console.log(data);
+      setCurrentUserInfo(data);
     });
 
     socket.on("update_client_id", (data) => {
       setClientID(data);
-      console.log(clientID);
     });
   }, [socket]);
 

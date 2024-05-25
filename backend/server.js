@@ -59,10 +59,9 @@ io.on("connection", (socket) => {
   });
 
   socket.on("update_points", (data) => {
-    console.log(data.clientID);
     for (let i = 0; i < allUsers[data.room].length; i++) {
       if (allUsers[data.room][i].clientID == data.clientID) {
-        console.log(allUsers[data.room][i]);
+        allUsers[data.room][i].points++;
       }
     }
     socket.to(data.room).emit("update_user_info", allUsers[data.room]);
