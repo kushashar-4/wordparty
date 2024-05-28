@@ -23,7 +23,7 @@ io.on("connection", (socket) => {
     const userData = {
       clientID: socket.id,
       username: data.username,
-      points: 0,
+      lives: 3,
     };
 
     if (allUsers.hasOwnProperty(data.room)) {
@@ -58,14 +58,24 @@ io.on("connection", (socket) => {
     }
   });
 
-  socket.on("update_points", (data) => {
+  socket.on("update_life", (data) => {
     for (let i = 0; i < allUsers[data.room].length; i++) {
       if (allUsers[data.room][i].clientID == data.clientID) {
-        allUsers[data.room][i].points++;
+        data.isLife
+          ? allUsers[data.room][i].lives++
+          : allUsers[data.room][i].lives--;
       }
     }
-    socket.to(data.room).emit("update_user_info", allUsers[data.room]);
   });
+
+  // socket.on("update_points", (data) => {
+  //   for (let i = 0; i < allUsers[data.room].length; i++) {
+  //     if (allUsers[data.room][i].clientID == data.clientID) {
+  //       allUsers[data.room][i].points++;
+  //     }
+  //   }
+  //   socket.to(data.room).emit("update_user_info", allUsers[data.room]);
+  // });
 });
 
 server.listen(3000, () => {
