@@ -30,7 +30,10 @@ io.on("connection", (socket) => {
       allUsers[data.room].push(userData);
     } else {
       allUsers[data.room] = [userData];
+      allUsers[data.room].splice(0, 0, { isActiveGame: false });
     }
+
+    console.log(allUsers[data.room]);
 
     socket.to(data.room).emit("update_user_info", allUsers[data.room]);
     socket.emit("update_client_id", socket.id);
@@ -58,6 +61,12 @@ io.on("connection", (socket) => {
     }
   });
 
+  socket.on("start_game", (data) => {
+    allUsers[data.room][0].isActiveGame = true;
+
+    socket.to(data.room).emit("update_user_info", allUsers[data.room]);
+  });
+
   socket.on("update_life", (data) => {
     for (let i = 0; i < allUsers[data.room].length; i++) {
       if (allUsers[data.room][i].clientID == data.clientID) {
@@ -67,15 +76,6 @@ io.on("connection", (socket) => {
       }
     }
   });
-
-  // socket.on("update_points", (data) => {
-  //   for (let i = 0; i < allUsers[data.room].length; i++) {
-  //     if (allUsers[data.room][i].clientID == data.clientID) {
-  //       allUsers[data.room][i].points++;
-  //     }
-  //   }
-  //   socket.to(data.room).emit("update_user_info", allUsers[data.room]);
-  // });
 });
 
 server.listen(3000, () => {

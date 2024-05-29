@@ -1,3 +1,4 @@
+import { set } from "lodash";
 import { useEffect, useState } from "react";
 import io from "socket.io-client";
 
@@ -10,6 +11,7 @@ export default function WordPartyTesting() {
   const [lives, setLives] = useState(3);
   const [globalUsersInfo, setGlobalUsersInfo] = useState([]);
   const [clientID, setClientID] = useState("");
+  const [isActiveGame, setIsActiveGame] = useState(false);
   const [activeUserIndex, setActiveUserIndex] = useState(0);
   let usedWords = new Set();
 
@@ -26,21 +28,25 @@ export default function WordPartyTesting() {
     socket.emit("update_points", { pointAmount, room, clientID });
   };
 
+  const logData = () => {
+    console.log(globalUsersInfo);
+  };
+
   const startGame = () => {
-    activeUserIndex == globalUsersInfo.length
-      ? setActiveUserIndex(0)
+    socket.emit("start_game", { clientID, room });
+    activeUserIndex == globalUsersInfo.length - 1
+      ? setActiveUserIndex(1)
       : setActiveUserIndex(activeUserIndex + 1);
-    console.log(activeUserIndex);
+    console.log(globalUsersInfo[activeUserIndex]);
     const logController = () => {
       const intervalId = setInterval(() => {
         activeUserIndex == globalUsersInfo.length
           ? setActiveUserIndex(0)
           : setActiveUserIndex(activeUserIndex + 1);
-        console.log(activeUserIndex);
+        console.log(globalUsersInfo[activeUserIndex]);
       }, 5000);
       return intervalId;
     };
-
     const timeController = () => {
       const intervalId = logController();
       setTimeout(() => {
@@ -48,18 +54,19 @@ export default function WordPartyTesting() {
         clearInterval(intervalId);
       }, 60000);
     };
-
     timeController();
   };
 
   useEffect(() => {
     socket.on("update_user_info", (data) => {
-      console.log(data);
       setGlobalUsersInfo(data);
       for (let i = 0; i < globalUsersInfo.length; i++) {
         if (globalUsersInfo[i].clientID == clientID) {
           setLives(globalUsersInfo[i].lives);
         }
+      }
+      if (data[0].isActiveGame) {
+        setIsActiveGame(data[0].isActiveGame);
       }
     });
 
@@ -87,6 +94,14 @@ export default function WordPartyTesting() {
           <button onClick={addPoint}>Add a point</button>
           <button onClick={startGame}>Start</button>
         </>
+      )}
+      {isActiveGame ? (
+        <div>
+          <p>Game is active</p>
+          <button onClick={logData}>Log user info</button>
+        </div>
+      ) : (
+        <p>Game is not active</p>
       )}
     </div>
   );
