@@ -12,7 +12,7 @@ export default function WordPartyTesting() {
   const [globalUsersInfo, setGlobalUsersInfo] = useState([]);
   const [clientID, setClientID] = useState("");
   const [isActiveGame, setIsActiveGame] = useState(false);
-  const [activeUserIndex, setActiveUserIndex] = useState(0);
+  const [activeUserIndex, setActiveUserIndex] = useState(1);
   let usedWords = new Set();
 
   const joinRoom = () => {
@@ -32,18 +32,19 @@ export default function WordPartyTesting() {
     console.log(globalUsersInfo);
   };
 
-  const startGame = () => {
+  const startGameForAllUsers = () => {
     socket.emit("start_game", { clientID, room });
-    activeUserIndex == globalUsersInfo.length - 1
-      ? setActiveUserIndex(1)
-      : setActiveUserIndex(activeUserIndex + 1);
-    console.log(globalUsersInfo[activeUserIndex]);
+  };
+
+  const startGameLocal = () => {
     const logController = () => {
       const intervalId = setInterval(() => {
-        activeUserIndex == globalUsersInfo.length
-          ? setActiveUserIndex(0)
-          : setActiveUserIndex(activeUserIndex + 1);
-        console.log(globalUsersInfo[activeUserIndex]);
+        if (activeUserIndex == globalUsersInfo.length - 1) {
+          setActiveUserIndex(1);
+        } else {
+          setActiveUserIndex(activeUserIndex + 1);
+          console.log("this is true");
+        }
       }, 5000);
       return intervalId;
     };
@@ -66,7 +67,7 @@ export default function WordPartyTesting() {
         }
       }
       if (data[0].isActiveGame) {
-        setIsActiveGame(data[0].isActiveGame);
+        setIsActiveGame(!isActiveGame);
       }
     });
 
@@ -74,6 +75,12 @@ export default function WordPartyTesting() {
       setClientID(data);
     });
   }, [socket]);
+
+  useEffect(() => {
+    if (isActiveGame) {
+      startGameLocal();
+    }
+  }, [isActiveGame]);
 
   return (
     <div>
@@ -92,13 +99,13 @@ export default function WordPartyTesting() {
       ) : (
         <>
           <button onClick={addPoint}>Add a point</button>
-          <button onClick={startGame}>Start</button>
+          <button onClick={startGameForAllUsers}>Start</button>
         </>
       )}
       {isActiveGame ? (
         <div>
           <p>Game is active</p>
-          <button onClick={logData}>Log user info</button>
+          <p>Active user index: {activeUserIndex}</p>
         </div>
       ) : (
         <p>Game is not active</p>
