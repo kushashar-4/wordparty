@@ -13,6 +13,9 @@ export default function WordPartyTesting() {
   const [clientID, setClientID] = useState("");
   const [isActiveGame, setIsActiveGame] = useState(false);
   const [activeUserIndex, setActiveUserIndex] = useState(1);
+  const [activeUser, setActiveUser] = useState(
+    globalUsersInfo[activeUserIndex]
+  );
   let usedWords = new Set();
 
   const joinRoom = () => {
@@ -28,10 +31,6 @@ export default function WordPartyTesting() {
     socket.emit("update_points", { pointAmount, room, clientID });
   };
 
-  const logData = () => {
-    console.log(globalUsersInfo);
-  };
-
   const startGameForAllUsers = () => {
     socket.emit("start_game", { clientID, room });
   };
@@ -39,12 +38,14 @@ export default function WordPartyTesting() {
   const startGameLocal = () => {
     const logController = () => {
       const intervalId = setInterval(() => {
-        if (activeUserIndex == globalUsersInfo.length - 1) {
-          setActiveUserIndex(1);
-        } else {
-          setActiveUserIndex(activeUserIndex + 1);
-          console.log("this is true");
-        }
+        setActiveUserIndex((prev) => {
+          if (prev === 0) {
+            return 1;
+          } else {
+            return (prev + 1) % globalUsersInfo.length || 1;
+          }
+        });
+        setActiveUser(activeUserIndex);
       }, 5000);
       return intervalId;
     };
@@ -106,6 +107,7 @@ export default function WordPartyTesting() {
         <div>
           <p>Game is active</p>
           <p>Active user index: {activeUserIndex}</p>
+          <p>Active user: {activeUser}</p>
         </div>
       ) : (
         <p>Game is not active</p>
