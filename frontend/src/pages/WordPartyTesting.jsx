@@ -13,9 +13,7 @@ export default function WordPartyTesting() {
   const [clientID, setClientID] = useState("");
   const [isActiveGame, setIsActiveGame] = useState(false);
   const [activeUserIndex, setActiveUserIndex] = useState(1);
-  const [activeUser, setActiveUser] = useState(
-    globalUsersInfo[activeUserIndex]
-  );
+  const [activeUser, setActiveUser] = useState();
   let usedWords = new Set();
 
   const joinRoom = () => {
@@ -36,6 +34,7 @@ export default function WordPartyTesting() {
   };
 
   const startGameLocal = () => {
+    setActiveUser(globalUsersInfo[activeUserIndex].username);
     const logController = () => {
       const intervalId = setInterval(() => {
         setActiveUserIndex((prev) => {
@@ -45,7 +44,6 @@ export default function WordPartyTesting() {
             return (prev + 1) % globalUsersInfo.length || 1;
           }
         });
-        setActiveUser(activeUserIndex);
       }, 5000);
       return intervalId;
     };
@@ -83,6 +81,12 @@ export default function WordPartyTesting() {
     }
   }, [isActiveGame]);
 
+  useEffect(() => {
+    if (globalUsersInfo.length > 0) {
+      setActiveUser(globalUsersInfo[activeUserIndex].username);
+    }
+  }, [activeUserIndex]);
+
   return (
     <div>
       {!isRoom ? (
@@ -107,7 +111,7 @@ export default function WordPartyTesting() {
         <div>
           <p>Game is active</p>
           <p>Active user index: {activeUserIndex}</p>
-          <p>Active user: {activeUser}</p>
+          <p>Active user name: {activeUser}</p>
         </div>
       ) : (
         <p>Game is not active</p>
