@@ -4,7 +4,7 @@ export default async function fetchText() {
   let comboSet = new Set();
   let gameCombos = [];
 
-  //fetches information and puts it into a new se
+  // Fetches dictionary -> transfers to set
   let resp = await fetch("http://localhost:5173/dictionary.txt");
   let final = await resp.text();
   final = final.replaceAll("\r", "");
@@ -13,9 +13,9 @@ export default async function fetchText() {
 
   const repeatedMap = new Map();
 
-  //gets all possible sequential 3 letter combinations in the english alphabet
   calculateCombos(dictionaryArray);
 
+  // Creates a dictionary of all possible 3 letter sequential combos in the english dictionary
   function calculateCombos(dictionaryArray) {
     //for loop logic populates a dictionary to keep track of the most common combinations.
     for (let i = 0; i < dictionaryArray.length; i++) {
@@ -37,7 +37,7 @@ export default async function fetchText() {
     }
   }
 
-  //creates an array from the map and sorts it from greatest to least repititions
+  // Creates an array from the map and sorts it from greatest to least repititions
   let arrayFromMap = Array.from(repeatedMap);
   arrayFromMap.sort((a, b) => b[1] - a[1]);
 
