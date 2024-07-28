@@ -12,6 +12,7 @@ export default function WordPartyTesting() {
   const [word, setWord] = useState("");
   const [lives, setLives] = useState(3);
   const [comboList, setComboList] = useState([])
+  const [dictionarySet, setDictionarySet] = useState(0)
   const [combo, setCombo] = useState("")
   const [isCorrect, setIsCorrect] = useState(false)
 
@@ -24,7 +25,7 @@ export default function WordPartyTesting() {
   const [activeUserIndex, setActiveUserIndex] = useState(1);
   const [activeUser, setActiveUser] = useState();
 
-  let usedWords = new Set();
+  // let usedWords = new Set();
 
   const joinRoom = () => {
     if (room !== "" && username !== "") {
@@ -81,11 +82,13 @@ export default function WordPartyTesting() {
 
   // Gets the list of common sequential combinations
   useEffect(() => {
-    async function getComboList(){
-      setComboList(await fetchText())
+    async function getDictInfo(){
+      let tempInfo = await fetchText()
+      setComboList(tempInfo[0])
+      setDictionarySet(tempInfo[1])
     }
 
-    getComboList()
+    getDictInfo()
   }, [])
 
   // Backend communication
@@ -115,7 +118,9 @@ export default function WordPartyTesting() {
 
   // Game functions
   const handleWordSubmit = () => {
-    
+    if(dictionarySet.has(word.toUpperCase())  && word.toUpperCase().includes(combo)){
+      console.log("good job!")
+    }
   }
 
   return (
@@ -145,7 +150,7 @@ export default function WordPartyTesting() {
           <p>Lives: {lives}</p>
           <p>Combo: {combo}</p>
           <input onChange={(e) => setWord(e.target.value)}></input>
-          <button onClick={handleWordSubmit}></button>
+          <button onClick={handleWordSubmit}>Submit</button>
         </div>
       ) : (
         <p>Game is not active</p>

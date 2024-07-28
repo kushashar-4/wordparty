@@ -45,5 +45,5 @@ export default async function fetchText() {
     gameCombos.push(arrayFromMap[i]);
   }
 
-  return gameCombos;
+  return [gameCombos, dictionarySet];
 }
