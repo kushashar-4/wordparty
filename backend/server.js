@@ -73,12 +73,12 @@ io.on("connection", (socket) => {
   socket.on("update_life", (data) => {
     for (let i = 0; i < allUsers[data.room].length; i++) {
       if (allUsers[data.room][i].clientID == data.clientID) {
-        data.isLife
+        data.isCorrect
           ? allUsers[data.room][i].lives++
           : allUsers[data.room][i].lives--;
       }
     }
-
+    console.log(allUsers[data.room])
     socket.to(data.room).emit("update_user_info", allUsers[data.room]);
   });
 
@@ -87,13 +87,6 @@ io.on("connection", (socket) => {
   })
 
   socket.on("get_active_user_index", (data) => {
-    // setActiveUserIndex((prev) => {
-    //   if (prev === 0) {
-    //     return 1;
-    //   } else {
-    //     return (prev + 1) % globalUsersInfo.length || 1;
-    //   }
-    // });
     var newIndex = 0;
     if(data.activeUserIndex === 0) {
       newIndex = 0;

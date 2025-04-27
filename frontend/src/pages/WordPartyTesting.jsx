@@ -14,8 +14,7 @@ export default function WordPartyTesting() {
   const [comboList, setComboList] = useState([])
   const [dictionarySet, setDictionarySet] = useState(0)
   const [combo, setCombo] = useState("")
-  const [isCorrect, setIsCorrect] = useState(false)
-
+  const [isCorrect, setIsCorrect] = useState(false);
 
 
   // Backend -> frontend information transfer
@@ -25,8 +24,6 @@ export default function WordPartyTesting() {
   const [activeUserIndex, setActiveUserIndex] = useState(1);
   const [activeUser, setActiveUser] = useState();
 
-  // let usedWords = new Set();
-
   const joinRoom = () => {
     if (room !== "" && username !== "") {
       socket.emit("join_room", { room, username });
@@ -35,6 +32,7 @@ export default function WordPartyTesting() {
       window.alert("enter both fields");
     }
   };
+
   const startGameForAllUsers = () => {
     socket.emit("start_game", { clientID, room });
   };
@@ -49,8 +47,9 @@ export default function WordPartyTesting() {
   }
 
   const advanceUser = () => {
-    if(globalUsersInfo[activeUserIndex].username == username) {
-      console.log("updating")
+    if(globalUsersInfo[activeUserIndex].clientID == clientID) {
+      socket.emit("update_life", {room, clientID, isCorrect, lives})
+      setIsCorrect(false);
       getActiveUserIndex();
       getCombo();
     }
@@ -59,17 +58,10 @@ export default function WordPartyTesting() {
   // Starts the timed game events
   const startGameLocal = () => {
     setActiveUser(globalUsersInfo[activeUserIndex].username);
-    // setCombo(comboList[Math.floor(Math.random() * comboList.length)][0])
     getCombo();
 
     const logController = () => {
       const intervalId = setInterval(advanceUser, 10000);
-
-      if(globalUsersInfo[activeUserIndex.username] == username) {
-        console.log("taking away life")
-        var isLife = false;
-        socket.emit("update_life", {room, clientID, isLife})
-      }
 
       return intervalId;
     };
@@ -106,14 +98,19 @@ export default function WordPartyTesting() {
   // Backend communication
   useEffect(() => {
     socket.on("update_user_info", (data) => {
+      console.log("this is happening")
       setGlobalUsersInfo(data);
-      for (let i = 0; i < globalUsersInfo.length; i++) {
-        if (globalUsersInfo[i].clientID == clientID) {
-          setLives(globalUsersInfo[i].lives);
-        }
-      }
+      setUserLives(data);
       setIsActiveGame(data[0].isActiveGame)
     });
+
+    async function setUserLives(data) {
+      for (let i = 1; i < data.length; i++) {
+        if (data[i].username == username) {
+          setLives(data[i].lives);
+        }
+      }
+    }
 
     socket.on("update_client_id", (data) => {
       setClientID(data);
@@ -138,7 +135,7 @@ export default function WordPartyTesting() {
   // Game functions
   const handleWordSubmit = () => {
     if(dictionarySet.has(word.toUpperCase())  && word.toUpperCase().includes(combo)){
-      console.log("good job!")
+      setIsCorrect(true);
       advanceUser();
     }
   }
