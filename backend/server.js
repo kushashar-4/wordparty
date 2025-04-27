@@ -45,15 +45,18 @@ io.on("connection", (socket) => {
     let clientRoom = infoArray[1];
     for (const room of socket.rooms) {
       if (room !== socket.id) {
-        if (allUsers[clientRoom].length == 1) {
-          delete allUsers[clientRoom];
-        } else {
-          for (let i = 0; i < allUsers[clientRoom].length; i++) {
-            if (allUsers[clientRoom][i].clientID == clientID) {
-              allUsers[clientRoom].splice(i, 1);
-            }
-          }
-        }
+        // if (allUsers[clientRoom].length == 1) {
+        //   delete allUsers[clientRoom];
+        //   console.log("deleting");
+        // } else {
+        //   console.log("this other thing is happening")
+        //   for (let i = 0; i < allUsers[clientRoom].length; i++) {
+        //     if (allUsers[clientRoom][i].clientID == clientID) {
+        //       allUsers[clientRoom].splice(i, 1);
+        //     }
+        //   }
+        // }
+        delete allUsers[clientRoom];
       }
     }
     if (allUsers[clientRoom] !== null) {
@@ -75,7 +78,31 @@ io.on("connection", (socket) => {
           : allUsers[data.room][i].lives--;
       }
     }
+
+    socket.to(data.room).emit("update_user_info", allUsers[data.room]);
   });
+
+  socket.on("get_combo", (data) => {
+    socket.to(data.room).emit("update_combo", data.comboList[Math.floor(Math.random() * data.comboList.length)][0]);
+  })
+
+  socket.on("get_active_user_index", (data) => {
+    // setActiveUserIndex((prev) => {
+    //   if (prev === 0) {
+    //     return 1;
+    //   } else {
+    //     return (prev + 1) % globalUsersInfo.length || 1;
+    //   }
+    // });
+    var newIndex = 0;
+    if(data.activeUserIndex === 0) {
+      newIndex = 0;
+    }
+    else {
+      newIndex = (data.activeUserIndex + 1) % data.len || 1;
+    }
+    socket.to(data.room).emit("update_active_user_index", newIndex)
+  })
 });
 
 server.listen(3000, () => {

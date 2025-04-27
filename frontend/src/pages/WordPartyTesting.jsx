@@ -35,31 +35,42 @@ export default function WordPartyTesting() {
       window.alert("enter both fields");
     }
   };
-
-  const addPoint = () => {
-    socket.emit("update_points", { pointAmount, room, clientID });
-  };
-
   const startGameForAllUsers = () => {
     socket.emit("start_game", { clientID, room });
   };
 
+  const getCombo = () => {
+    socket.emit("get_combo", {room, comboList})
+  }
+
+  const getActiveUserIndex = () => {
+    var len = globalUsersInfo.length
+    socket.emit("get_active_user_index", {room, activeUserIndex, len})
+  }
+
+  const advanceUser = () => {
+    if(globalUsersInfo[activeUserIndex].username == username) {
+      console.log("updating")
+      getActiveUserIndex();
+      getCombo();
+    }
+  }
+
   // Starts the timed game events
   const startGameLocal = () => {
     setActiveUser(globalUsersInfo[activeUserIndex].username);
-    setCombo(comboList[Math.floor(Math.random() * comboList.length)][0])
+    // setCombo(comboList[Math.floor(Math.random() * comboList.length)][0])
+    getCombo();
 
     const logController = () => {
-      const intervalId = setInterval(() => {
-        setActiveUserIndex((prev) => {
-          if (prev === 0) {
-            return 1;
-          } else {
-            return (prev + 1) % globalUsersInfo.length || 1;
-          }
-        });
-        setCombo(comboList[Math.floor(Math.random() * comboList.length)][0])
-      }, 5000);
+      const intervalId = setInterval(advanceUser, 10000);
+
+      if(globalUsersInfo[activeUserIndex.username] == username) {
+        console.log("taking away life")
+        var isLife = false;
+        socket.emit("update_life", {room, clientID, isLife})
+      }
+
       return intervalId;
     };
 
@@ -70,6 +81,7 @@ export default function WordPartyTesting() {
         clearInterval(intervalId);
       }, 60000);
     };
+
     timeController();
   };
 
@@ -100,14 +112,21 @@ export default function WordPartyTesting() {
           setLives(globalUsersInfo[i].lives);
         }
       }
-      if (data[0].isActiveGame) {
-        setIsActiveGame(!isActiveGame);
-      }
+      setIsActiveGame(data[0].isActiveGame)
     });
 
     socket.on("update_client_id", (data) => {
       setClientID(data);
     });
+
+    socket.on("update_combo", (data) => {
+      setCombo(data);
+    })
+
+    socket.on("update_active_user_index", (data) => {
+      setActiveUserIndex(data);
+    })
+
   }, [socket]);
 
   useEffect(() => {
@@ -120,6 +139,7 @@ export default function WordPartyTesting() {
   const handleWordSubmit = () => {
     if(dictionarySet.has(word.toUpperCase())  && word.toUpperCase().includes(combo)){
       console.log("good job!")
+      advanceUser();
     }
   }
 
@@ -139,13 +159,13 @@ export default function WordPartyTesting() {
         </>
       ) : (
         <>
-          <button onClick={addPoint}>Add a point</button>
           <button onClick={startGameForAllUsers}>Start</button>
         </>
       )}
       {isActiveGame ? (
         <div>
           <p>Game is active</p>
+          <p>Your user name: {username}</p>
           <p>Active user name: {activeUser}</p>
           <p>Lives: {lives}</p>
           <p>Combo: {combo}</p>
