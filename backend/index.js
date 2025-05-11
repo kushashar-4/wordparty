@@ -6,6 +6,8 @@ const cors = require("cors");
 app.use(cors());
 
 const server = http.createServer();
+app.get("/", (req, res) => res.send("Express on Vercel"));
+
 
 const io = new Server(server, {
   cors: {
