@@ -56,7 +56,6 @@ io.on("connection", (socket) => {
 
   socket.on("start_game", (data) => {
     allUsers[data.room][0].isActiveGame = true;
-
     socket.to(data.room).emit("update_user_info", allUsers[data.room]);
   });
 
@@ -92,34 +91,9 @@ io.on("connection", (socket) => {
       }
 
       roomTimers[data.room] = setTimeout(() => advanceUser(false), 10000)
-      console.log("switching")
     }
 
     advanceUser(isCorrect)
-  })
-
-  socket.on("get_game_info", (data) => {
-    // Random index
-    var userCount = data.len - 1;
-    let currentIndex = data.activeUserIndex;
-    let newIndex = currentIndex + 1 > userCount ? 1 : currentIndex + 1;
-  
-    socket.to(data.room).emit("update_active_user_index", newIndex);
-
-    // Lives updating
-    if(allUsers[data.room]) {
-      for (let i = 0; i < allUsers[data.room].length; i++) {
-        if (allUsers[data.room][i].clientID == data.clientID) {
-          if(!data.isCorrect) {
-            allUsers[data.room][i].lives--;
-          }
-        }
-      }
-      socket.to(data.room).emit("update_user_info", allUsers[data.room]);
-    }
-
-    // New combo
-    socket.to(data.room).emit("update_combo", data.comboList[Math.floor(Math.random() * data.comboList.length)][0]);
   })
 });
 
