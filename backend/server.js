@@ -66,31 +66,33 @@ io.on("connection", (socket) => {
     const advanceUser = (isCorrect) => {
 
       // Update lives
-      if(!isCorrect) {
-        for (let i = 0; i < allUsers[data.room].length; i++) {
-          if(i == currentIndex) {
-            allUsers[data.room][i].lives--;
+      if(allUsers[data.room]) {
+        if(!isCorrect) {
+          for (let i = 0; i < allUsers[data.room].length; i++) {
+            if(i == currentIndex) {
+              allUsers[data.room][i].lives--;
+            }
           }
         }
-      }
-  
-      socket.to(data.room).emit("update_user_info", allUsers[data.room]);
     
-      // Update active user index
-      const userCount = data.len - 1;
-      currentIndex = currentIndex + 1 > userCount ? 1 : currentIndex + 1;
-
-      socket.to(data.room).emit("update_active_user_index", currentIndex);
-
-      // Send new combo
-      const newCombo = data.comboList[Math.floor(Math.random() * data.comboList.length)][0];
-      socket.to(data.room).emit("update_combo", newCombo);
-
-      if(isCorrect) {
-        clearTimeout(roomTimers[data.room]);
+        socket.to(data.room).emit("update_user_info", allUsers[data.room]);
+      
+        // Update active user index
+        const userCount = data.len - 1;
+        currentIndex = currentIndex + 1 > userCount ? 1 : currentIndex + 1;
+  
+        socket.to(data.room).emit("update_active_user_index", currentIndex);
+  
+        // Send new combo
+        const newCombo = data.comboList[Math.floor(Math.random() * data.comboList.length)][0];
+        socket.to(data.room).emit("update_combo", newCombo);
+  
+        if(isCorrect) {
+          clearTimeout(roomTimers[data.room]);
+        }
+  
+        roomTimers[data.room] = setTimeout(() => advanceUser(false), 10000)
       }
-
-      roomTimers[data.room] = setTimeout(() => advanceUser(false), 10000)
     }
 
     advanceUser(isCorrect)
