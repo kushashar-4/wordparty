@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import io from "socket.io-client";
 import fetchText from "../utils/dictionaryutil";
 
@@ -14,7 +14,6 @@ export default function WordPartyTesting() {
   const [comboList, setComboList] = useState([])
   const [dictionarySet, setDictionarySet] = useState(0)
   const [combo, setCombo] = useState("")
-  const [isCorrect, setIsCorrect] = useState(false);
 
 
   // Backend -> frontend information transfer
@@ -35,54 +34,14 @@ export default function WordPartyTesting() {
 
   const startGameForAllUsers = () => {
     socket.emit("start_game", { clientID, room });
+    socket.emit("advance_game_server", {room, clientID, isCorrect : true, lives, len : globalUsersInfo.length, activeUserIndex, comboList})
   };
-
-  const getCombo = () => {
-    socket.emit("get_combo", {room, comboList})
-  }
-
-  const getActiveUserIndex = () => {
-    var len = globalUsersInfo.length
-    socket.emit("get_active_user_index", {room, activeUserIndex, len})
-  }
 
   const advanceUser = () => {
     if(globalUsersInfo[activeUserIndex].clientID == clientID) {
-      socket.emit("update_life", {room, clientID, isCorrect, lives})
-      setIsCorrect(false);
-      getActiveUserIndex();
-      getCombo();
+      socket.emit("advance_game_server", {room, clientID, isCorrect : true, lives, len : globalUsersInfo.length, activeUserIndex, comboList});
     }
   }
-
-  // Starts the timed game events
-  const startGameLocal = () => {
-    setActiveUser(globalUsersInfo[activeUserIndex].username);
-    getCombo();
-
-    const logController = () => {
-      const intervalId = setInterval(advanceUser, 10000);
-
-      return intervalId;
-    };
-
-    const timeController = () => {
-      const intervalId = logController();
-      setTimeout(() => {
-        console.log("game has ended");
-        clearInterval(intervalId);
-      }, 60000);
-    };
-
-    timeController();
-  };
-
-  // Uses the emitted server message to start the game
-  useEffect(() => {
-    if (isActiveGame) {
-      startGameLocal();
-    }
-  }, [isActiveGame]);
 
   // Gets the list of common sequential combinations
   useEffect(() => {
@@ -98,7 +57,6 @@ export default function WordPartyTesting() {
   // Backend communication
   useEffect(() => {
     socket.on("update_user_info", (data) => {
-      console.log("this is happening")
       setGlobalUsersInfo(data);
       setUserLives(data);
       setIsActiveGame(data[0].isActiveGame)
@@ -107,6 +65,9 @@ export default function WordPartyTesting() {
     async function setUserLives(data) {
       for (let i = 1; i < data.length; i++) {
         if (data[i].username == username) {
+          if(data[i].lives == 0) {
+            window.alert(username + " lost")
+          }
           setLives(data[i].lives);
         }
       }
@@ -123,7 +84,6 @@ export default function WordPartyTesting() {
     socket.on("update_active_user_index", (data) => {
       setActiveUserIndex(data);
     })
-
   }, [socket]);
 
   useEffect(() => {
@@ -135,7 +95,6 @@ export default function WordPartyTesting() {
   // Game functions
   const handleWordSubmit = () => {
     if(dictionarySet.has(word.toUpperCase())  && word.toUpperCase().includes(combo)){
-      setIsCorrect(true);
       advanceUser();
     }
   }

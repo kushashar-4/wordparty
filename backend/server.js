@@ -14,8 +14,9 @@ const io = new Server(server, {
   },
 });
 
-// let totalrooms = io.sockets.adapter.rooms;
 const allUsers = {};
+const roomTimers = {}; // key : room, value : timeoutID
+
 
 io.on("connection", (socket) => {
   socket.on("join_room", (data) => {
@@ -45,17 +46,6 @@ io.on("connection", (socket) => {
     let clientRoom = infoArray[1];
     for (const room of socket.rooms) {
       if (room !== socket.id) {
-        // if (allUsers[clientRoom].length == 1) {
-        //   delete allUsers[clientRoom];
-        //   console.log("deleting");
-        // } else {
-        //   console.log("this other thing is happening")
-        //   for (let i = 0; i < allUsers[clientRoom].length; i++) {
-        //     if (allUsers[clientRoom][i].clientID == clientID) {
-        //       allUsers[clientRoom].splice(i, 1);
-        //     }
-        //   }
-        // }
         delete allUsers[clientRoom];
       }
     }
@@ -70,31 +60,66 @@ io.on("connection", (socket) => {
     socket.to(data.room).emit("update_user_info", allUsers[data.room]);
   });
 
-  socket.on("update_life", (data) => {
-    for (let i = 0; i < allUsers[data.room].length; i++) {
-      if (allUsers[data.room][i].clientID == data.clientID) {
-        data.isCorrect
-          ? allUsers[data.room][i].lives++
-          : allUsers[data.room][i].lives--;
-      }
-    }
-    console.log(allUsers[data.room])
-    socket.to(data.room).emit("update_user_info", allUsers[data.room]);
-  });
+  socket.on("advance_game_server", (data) => {
+    let currentIndex = data.activeUserIndex;
+    let isCorrect = data.isCorrect;
 
-  socket.on("get_combo", (data) => {
-    socket.to(data.room).emit("update_combo", data.comboList[Math.floor(Math.random() * data.comboList.length)][0]);
+    const advanceUser = (isCorrect) => {
+
+      // Update lives
+      if(!isCorrect) {
+        for (let i = 0; i < allUsers[data.room].length; i++) {
+          if(i == currentIndex) {
+            allUsers[data.room][i].lives--;
+          }
+        }
+      }
+  
+      socket.to(data.room).emit("update_user_info", allUsers[data.room]);
+    
+      // Update active user index
+      const userCount = data.len - 1;
+      currentIndex = currentIndex + 1 > userCount ? 1 : currentIndex + 1;
+
+      socket.to(data.room).emit("update_active_user_index", currentIndex);
+
+      // Send new combo
+      const newCombo = data.comboList[Math.floor(Math.random() * data.comboList.length)][0];
+      socket.to(data.room).emit("update_combo", newCombo);
+
+      if(isCorrect) {
+        clearTimeout(roomTimers[data.room]);
+      }
+
+      roomTimers[data.room] = setTimeout(() => advanceUser(false), 10000)
+      console.log("switching")
+    }
+
+    advanceUser(isCorrect)
   })
 
-  socket.on("get_active_user_index", (data) => {
-    var newIndex = 0;
-    if(data.activeUserIndex === 0) {
-      newIndex = 0;
+  socket.on("get_game_info", (data) => {
+    // Random index
+    var userCount = data.len - 1;
+    let currentIndex = data.activeUserIndex;
+    let newIndex = currentIndex + 1 > userCount ? 1 : currentIndex + 1;
+  
+    socket.to(data.room).emit("update_active_user_index", newIndex);
+
+    // Lives updating
+    if(allUsers[data.room]) {
+      for (let i = 0; i < allUsers[data.room].length; i++) {
+        if (allUsers[data.room][i].clientID == data.clientID) {
+          if(!data.isCorrect) {
+            allUsers[data.room][i].lives--;
+          }
+        }
+      }
+      socket.to(data.room).emit("update_user_info", allUsers[data.room]);
     }
-    else {
-      newIndex = (data.activeUserIndex + 1) % data.len || 1;
-    }
-    socket.to(data.room).emit("update_active_user_index", newIndex)
+
+    // New combo
+    socket.to(data.room).emit("update_combo", data.comboList[Math.floor(Math.random() * data.comboList.length)][0]);
   })
 });
 
